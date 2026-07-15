@@ -677,9 +677,13 @@ class Handler(BaseHTTPRequestHandler):
                     cliente_id = cid
                     break
 
+            if not cliente_id and CLIENTES:
+                # Usa o primeiro cliente ativo se número não vinculado
+                cliente_id = next(iter(CLIENTES))
+                log(f"Número não vinculado — usando cliente padrão: {cliente_id}")
+
             if not cliente_id:
-                # Resposta padrão se número não cadastrado
-                twiml = '<?xml version="1.0"?><Response><Message>Olá! Este número ainda não está configurado.</Message></Response>'
+                twiml = '<?xml version="1.0"?><Response><Message>Olá! Nenhum cliente configurado ainda.</Message></Response>'
             else:
                 resposta = gerar_resposta(cliente_id, body_msg)
                 MSGS_HOJE[0] += 1
