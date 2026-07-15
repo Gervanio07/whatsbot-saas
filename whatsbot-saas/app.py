@@ -40,13 +40,17 @@ def carregar():
         log(f"{len(CLIENTES)} clientes carregados")
 
 # ── Motor IA ──────────────────────────────────────────────────────────────
+CEREBRAS_KEY   = "csk-6pc9f98ypfw5kp2hw9nv6ywt9n3j4hpe9h3dh2ww39k939cy"
+CEREBRAS_URL   = "https://api.cerebras.ai/v1/chat/completions"
+CEREBRAS_MODEL = "gpt-oss-120b"
+
 def gerar_resposta(cliente_id, pergunta):
     cliente = CLIENTES.get(cliente_id)
     if not cliente:
         return "Bot não configurado."
 
     cfg = cliente.get("config", {})
-    key = os.environ.get("CEREBRAS_KEY", "").strip()
+    key = os.environ.get("CEREBRAS_KEY", CEREBRAS_KEY).strip()
     if not key:
         return "Chave de IA não configurada no servidor."
 
@@ -83,7 +87,7 @@ def gerar_resposta(cliente_id, pergunta):
         msgs.append(h)
     msgs.append({"role": "user", "content": pergunta})
 
-    modelo = cfg.get("modelo", "gpt-oss-120b") or "gpt-oss-120b"
+    modelo = cfg.get("modelo", CEREBRAS_MODEL) or CEREBRAS_MODEL
     payload = json.dumps({
         "model": modelo,
         "messages": msgs,
@@ -92,7 +96,7 @@ def gerar_resposta(cliente_id, pergunta):
     }).encode("utf-8")
 
     req = urllib.request.Request(
-        "https://api.cerebras.ai/v1/chat/completions",
+        CEREBRAS_URL,
         data=payload,
         headers={
             "Authorization": "Bearer " + key,
