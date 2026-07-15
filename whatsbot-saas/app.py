@@ -40,8 +40,9 @@ def carregar():
         log(f"{len(CLIENTES)} clientes carregados")
 
 # ── Motor IA ──────────────────────────────────────────────────────────────
-GEMINI_KEY    = "AIzaSyDywsZRBbjP_qiqnKeQXMh6ak4mE0xAnb0"
-GEMINI_MODELO = "models/gemini-3-flash-preview"
+API_KEY  = "csk-6pc9f98ypfw5kp2hw9nv6ywt9n3j4hpe9h3dh2ww39k939cy"
+API_URL  = "https://api.cerebras.ai/v1/chat/completions"
+MODELO   = "gpt-oss-120b"
 
 def gerar_resposta(cliente_id, pergunta):
     cliente = CLIENTES.get(cliente_id)
@@ -49,7 +50,7 @@ def gerar_resposta(cliente_id, pergunta):
         return "Bot não configurado."
 
     cfg = cliente.get("config", {})
-    key = os.environ.get("GEMINI_KEY", GEMINI_KEY).strip()
+    key = os.environ.get("API_KEY", API_KEY).strip()
     if not key:
         return "Chave de IA não configurada no servidor."
 
@@ -81,38 +82,38 @@ def gerar_resposta(cliente_id, pergunta):
 
     historico = cliente.get("historico", {}).get(pergunta[:20], [])
 
-    # Monta histórico no formato Gemini
-    contents = []
+    msgs = [{"role": "system", "content": system_prompt}]
     for h in historico[-4:]:
-        role = "user" if h["role"] == "user" else "model"
-        contents.append({"role": role, "parts": [{"text": h["content"]}]})
-    contents.append({"role": "user", "parts": [{"text": pergunta}]})
+        msgs.append(h)
+    msgs.append({"role": "user", "content": pergunta})
 
-    modelo = cfg.get("modelo", GEMINI_MODELO) or GEMINI_MODELO
-    url = f"https://generativelanguage.googleapis.com/v1beta/{modelo}:generateContent?key={key}"
-
+    modelo = cfg.get("modelo", MODELO) or MODELO
     payload = json.dumps({
-        "system_instruction": {"parts": [{"text": system_prompt}]},
-        "contents": contents,
-        "generationConfig": {"maxOutputTokens": 200, "temperature": 0.7}
+        "model": modelo,
+        "messages": msgs,
+        "max_tokens": 200,
+        "temperature": 0.7
     }).encode("utf-8")
 
     req = urllib.request.Request(
-        url,
+        API_URL,
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Authorization": "Bearer " + key,
+            "Content-Type": "application/json"
+        },
         method="POST"
     )
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+            return data["choices"][0]["message"]["content"].strip()
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8")
-        log(f"Gemini erro {e.code}: {body[:100]}")
+        log(f"Cerebras erro {e.code}: {body[:100]}")
         return "Desculpe, estou com dificuldades técnicas. Tente novamente em instantes."
     except Exception as ex:
-        log(f"Gemini ex: {ex}")
+        log(f"Cerebras ex: {ex}")
         return "Sem conexão com a IA no momento."
 
 # ── Twilio: enviar mensagem ───────────────────────────────────────────────
