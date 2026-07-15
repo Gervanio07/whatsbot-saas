@@ -1,0 +1,2 @@
+# Zero dependências externas — só biblioteca padrão do Python
+# Este arquivo existe apenas pro Render.com reconhecer como app Python

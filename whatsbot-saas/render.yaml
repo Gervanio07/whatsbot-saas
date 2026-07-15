@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: whatsbot-saas
+    env: python
+    buildCommand: echo "sem dependencias"
+    startCommand: python app.py
+    envVars:
+      - key: CEREBRAS_KEY
+        sync: false
