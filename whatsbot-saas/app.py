@@ -41,7 +41,7 @@ def carregar():
 
 # ── Motor IA ──────────────────────────────────────────────────────────────
 GEMINI_KEY    = "AIzaSyDywsZRBbjP_qiqnKeQXMh6ak4mE0xAnb0"
-GEMINI_MODELO = "models/gemini-2.0-flash"
+GEMINI_MODELO = "models/gemini-3-flash-preview"
 
 def gerar_resposta(cliente_id, pergunta):
     cliente = CLIENTES.get(cliente_id)
